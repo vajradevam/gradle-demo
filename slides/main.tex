@@ -1,0 +1,351 @@
+\documentclass[11pt,aspectratio=169]{beamer}
+
+\usepackage{xcolor}
+\definecolor{gradleteal}{HTML}{02303A}
+\definecolor{gradlegreen}{HTML}{1FA87A}
+\definecolor{codelight}{HTML}{F4F7F7}
+\definecolor{codeframe}{HTML}{9FB8B8}
+\definecolor{codecomment}{HTML}{4F4F4F}
+\definecolor{codestring}{HTML}{A31515}
+\definecolor{codekeyword}{HTML}{0033B3}
+\definecolor{linkgreen}{HTML}{0B6E4F}
+
+\usetheme{Madrid}
+\usecolortheme[named=gradleteal]{structure}
+\setbeamertemplate{navigation symbols}{}
+
+\usepackage{listings}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=gradleteal,urlcolor=linkgreen,citecolor=gradleteal}
+
+\setbeamercolor{title}{fg=gradleteal,bg=white}
+\setbeamercolor{subtitle}{fg=gray,bg=white}
+\setbeamercolor{author}{fg=black,bg=white}
+\setbeamercolor{date}{fg=gray,bg=white}
+\setbeamertemplate{title page}{
+  \vfill
+  \begin{center}
+    {\usebeamerfont{title}\color{gradleteal}\inserttitle}\par
+    \vskip2em
+    {\usebeamerfont{author}\color{black}\insertauthor}\par
+    \vskip1em
+    {\usebeamerfont{date}\color{gray}\insertdate}
+  \end{center}
+  \vfill
+}
+\setbeamercolor{frametitle}{fg=gradleteal,bg=codelight}
+\setbeamercolor{block title}{fg=white,bg=gradleteal}
+\setbeamercolor{block body}{fg=black,bg=codelight}
+\setbeamercolor{item}{fg=gradleteal}
+\setbeamercolor{author in head/foot}{fg=white,bg=gradleteal}
+\setbeamercolor{title in head/foot}{fg=white,bg=gradleteal}
+\setbeamercolor{date in head/foot}{fg=white,bg=gradleteal}
+\setbeamercolor{section in head/foot}{fg=white,bg=gradleteal}
+
+\lstset{
+  backgroundcolor=\color{codelight},
+  rulecolor=\color{codeframe},
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{codekeyword}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{codestring},
+  breaklines=true,
+  frame=single,
+  showstringspaces=false,
+  tabsize=2,
+}
+\lstdefinestyle{shell}{
+  language=bash,
+  keywordstyle=\color{black},
+  morekeywords={gradle,gradlew,java,javac,git,cd,mkdir,code,sudo,apt},
+}
+
+\title[Gradle in CS F213 Lab]{Using Gradle in CS F213 Lab}
+\author[A. Pathak]{Aman Pathak, PhD TA \\ \href{mailto:p20260018@goa.bits-pilani.ac.in}{\texttt{p20260018@goa.bits-pilani.ac.in}}}
+\date{CS F213 Lab}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{The problem: building by hand does not scale}
+  For one file, this is fine:
+  \begin{lstlisting}
+javac Calculator.java
+java Calculator
+  \end{lstlisting}
+  Real projects break this habit quickly:
+  \begin{itemize}
+    \item many files in packages, compiled in the right order
+    \item third-party libraries (where do the jars live?)
+    \item tests that must run the same way on every machine
+    \item ``it works on my laptop'' is not a build strategy
+  \end{itemize}
+  A build tool takes over all of this. Ours is Gradle, and we drive it
+  from the terminal.
+\end{frame}
+
+\begin{frame}{Why Gradle: what you get}
+  You describe \emph{what} the project is, Gradle figures out \emph{how}
+  to build it:
+  \begin{itemize}
+    \item \textbf{One setup command:} \texttt{gradle init} scaffolds the
+      whole project, folders and build files included
+    \item \textbf{Dependencies by name:} libraries fetched from Maven
+      Central, no jars passed around by hand
+    \item \textbf{Standard tasks:} \texttt{build}, \texttt{test},
+      \texttt{run}, \texttt{clean} work the same in every project
+    \item \textbf{Incremental builds:} only what changed gets rebuilt
+    \item \textbf{Same build everywhere:} the wrapper pins one Gradle
+      version for the whole class
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{gradle vs.\ gradlew: the one distinction to remember}
+  \begin{center}
+  {\scriptsize
+  \begin{tabular}{l|l|l}
+    & \texttt{gradle} & \texttt{./gradlew} \\ \hline
+    What it is & system install & wrapper script inside the repo \\
+    Version & whatever that machine has & pinned in
+      \texttt{gradle/wrapper/*.properties} \\
+    Comes from & pre-installed & created by \texttt{gradle init} \\
+  \end{tabular}
+  }
+  \end{center}
+  \vspace{0.5em}
+  \textbf{Rule for this course:} set the project up with \texttt{gradle},
+  then do everything else with \texttt{./gradlew}. Same command, same
+  version, every machine:
+  \begin{lstlisting}
+gradle init       # once: scaffolds the project (needs system Gradle)
+./gradlew build   # always: builds with the pinned version
+  \end{lstlisting}
+  Both commands must be run \textbf{inside the project root} (the folder
+  that holds \texttt{settings.gradle.kts}).
+
+  \vspace{0.3em}
+  {\scriptsize Further reading: \href{https://docs.gradle.org/current/userguide/gradle_wrapper.html}{Gradle Wrapper}
+  \textbar{} \href{https://docs.gradle.org/current/userguide/build_init_plugin.html}{Build Init plugin}}
+\end{frame}
+
+\begin{frame}[fragile]{Step 0: check your tools}
+  \begin{lstlisting}
+java -version      # we use Java 21
+gradle --version  # we use Gradle 9.x
+  \end{lstlisting}
+  You need exactly two VS Code extensions, nothing more:
+  \begin{itemize}
+    \item Microsoft Extension Pack for Java (language support, debugger,
+      test runner; Red Hat support is already inside it)
+    \item Gradle for Java (the Gradle tasks panel)
+  \end{itemize}
+  Do not use Code Runner: it compiles single files directly and ignores
+  the build files and the test framework.
+\end{frame}
+
+\begin{frame}[fragile]{Step 1: create the project with \texttt{gradle init}}
+  Make an empty folder, step into it, and run one command:
+  \begin{lstlisting}
+mkdir gradle-demo
+cd gradle-demo
+gradle init
+  \end{lstlisting}
+  Gradle now asks a short series of questions. Answer them exactly like
+  this (plain Enter means ``take the default''):
+  \begin{center}
+  {\scriptsize
+  \begin{tabular}{l|l}
+    Question & Your answer \\ \hline
+    Type of build & 1: Application \\
+    Implementation language & 1: Java \\
+    Target Java version & Enter (default: 21) \\
+    Project name & Enter (default: folder name) \\
+    Application structure & 1: Single application project \\
+    Build script DSL & 1: Kotlin (or Enter, it is the default) \\
+    Test framework & 1: JUnit 4 \\
+    New APIs and behavior & Enter (default: no) \\
+  \end{tabular}
+  }
+  \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Step 2: look at what \texttt{init} just made}
+  You wrote no files yourself. The project now looks like this:
+  \begin{lstlisting}
+gradle-demo/
+  settings.gradle.kts
+  gradlew / gradlew.bat          <- the wrapper (use this from now on)
+  gradle/wrapper/                <- pins the Gradle version
+  app/build.gradle.kts           <- the build file init wrote for you
+  app/src/main/java/org/example/App.java
+  app/src/test/java/org/example/AppTest.java
+  \end{lstlisting}
+  Two things to notice:
+  \begin{itemize}
+    \item the wrapper (\texttt{gradlew}) is part of the project now, so
+      from here on every command starts with \texttt{./gradlew}
+    \item tests already live where they belong:
+      \texttt{src/test/java/...}, next to a sample JUnit 4 test
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Step 2b: reading the file \texttt{init} wrote}
+  \texttt{app/build.gradle.kts}, trimmed to what matters:
+  \begin{lstlisting}
+plugins {
+    application          // brings the run task (and java tasks)
+}
+
+repositories {
+    mavenCentral()       // where libraries are fetched from
+}
+
+dependencies {
+    testImplementation(libs.junit)  // JUnit 4, version lives
+                                    // in gradle/libs.versions.toml
+}
+
+application {
+    mainClass = "org.example.App"   // what ./gradlew run starts
+}
+  \end{lstlisting}
+  Kotlin DSL notes: function-call style with double quotes
+  (\texttt{mavenCentral()}), and versions kept in one shared catalog
+  file instead of being scattered through the build.
+\end{frame}
+
+\begin{frame}[fragile]{Step 3: tasks come free with the plugins}
+  You never define \texttt{build}, \texttt{test}, \texttt{clean} or
+  \texttt{run}. The generated build file applies the right plugins, and
+  the plugins add the tasks:
+  \begin{itemize}
+    \item the \texttt{java} plugin adds \texttt{build}, \texttt{test},
+      \texttt{clean}, \texttt{check}, \texttt{jar}, \ldots
+    \item the \texttt{application} plugin adds \texttt{run}
+  \end{itemize}
+  Prove it to yourself, from the project root:
+  \begin{lstlisting}
+./gradlew tasks --all
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Step 4: the terminal workflow (1 of 2)}
+  From the project root:
+  \begin{lstlisting}
+./gradlew build   # compile + test + jar, the full check
+./gradlew test    # only the tests
+./gradlew clean   # delete the build/ folder
+  \end{lstlisting}
+  A healthy \texttt{build} ends with:
+  \begin{lstlisting}
+> Task :compileJava
+> Task :test
+> Task :build
+BUILD SUCCESSFUL
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Step 4: the terminal workflow (2 of 2)}
+  \begin{lstlisting}
+./gradlew run               # run the app, prints Hello World!
+./gradlew test --rerun-tasks  # run tests again even if
+                              # nothing changed
+./gradlew test --info         # extra detail when hunting
+                              # a failure
+  \end{lstlisting}
+  Reports land under \texttt{build/} (git-ignored), for example
+  \texttt{app/build/reports/tests/test/index.html}.
+\end{frame}
+
+\begin{frame}[fragile]{Adding production code: the rules}
+  \texttt{init} gave you a working sample. When you add your own classes:
+  \begin{enumerate}
+    \item Put the file under \texttt{app/src/main/java/}, in the folder
+      that matches its \texttt{package}.
+    \item One public class per file; the file name matches the class name.
+    \item Only code with a \texttt{main()} method can be \emph{run}.
+      Helper classes are used through tests or through the app, never
+      run directly.
+  \end{enumerate}
+  \begin{lstlisting}[language=Java]
+package org.example;
+
+public class Calculator {
+    public int add(int a, int b) {
+        return a + b;
+    }
+
+    public int divide(int a, int b) {
+        if (b == 0) {
+            throw new IllegalArgumentException("divisor must not be 0");
+        }
+        return a / b;
+    }
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Adding tests: the rules (JUnit 4)}
+  \begin{enumerate}
+    \item Put the file under \texttt{app/src/test/java/}, in the same
+      package folders as the code it tests.
+    \item Name it after the class under test plus \texttt{Test}
+      (\texttt{Calculator} becomes \texttt{CalculatorTest}).
+    \item JUnit 4 shape: import \texttt{org.junit.Test}, annotate each
+      test method with \texttt{@Test}, assert with
+      \texttt{org.junit.Assert}. Test methods are \texttt{public void}.
+  \end{enumerate}
+  \begin{lstlisting}[language=Java,basicstyle=\ttfamily\tiny]
+package org.example;
+
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+
+public class CalculatorTest {
+
+    private final Calculator calc = new Calculator();
+
+    @Test
+    public void addsTwoNumbers() {
+        assertEquals(5, calc.add(2, 3));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void divideByZeroThrows() {
+        calc.divide(1, 0);
+    }
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}{References: the original Gradle docs}
+  Everything in this deck comes from these pages. When in doubt, read
+  the docs before asking:
+  \begin{itemize}
+    \item \href{https://docs.gradle.org/current/userguide/build_init_plugin.html}{Build Init plugin}: every \texttt{gradle init} prompt explained
+    \item \href{https://docs.gradle.org/current/userguide/gradle_wrapper.html}{Gradle Wrapper}: how the pinned version works
+    \item \href{https://docs.gradle.org/current/userguide/building_java_projects.html}{Building Java projects}: plugins, source layout, tasks
+    \item \href{https://docs.gradle.org/current/userguide/java_testing.html}{Testing in Gradle}: how \texttt{test} finds and runs JUnit
+    \item \href{https://docs.gradle.org/current/userguide/part1_gradle_init.html}{Beginner tutorial: Initializing the Project}: the full init-generated Java example
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Cheat sheet (take a photo)}
+  \begin{lstlisting}
+mkdir gradle-demo && cd gradle-demo
+gradle init       # 1 Application, 1 Java, 21,
+                  # 1 Single, 1 Kotlin, 1 JUnit 4
+
+./gradlew build   # full check
+./gradlew test    # tests only
+./gradlew run     # run the app
+./gradlew clean   # start fresh
+  \end{lstlisting}
+  Stuck? Ask in this order: read the terminal output, open the HTML report
+  under \texttt{app/build/reports/}, then ask the TA. Thank you!
+\end{frame}
+
+\end{document}
